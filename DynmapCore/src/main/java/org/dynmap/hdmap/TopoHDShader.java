@@ -6,10 +6,7 @@ import java.io.IOException;
 import java.util.BitSet;
 import java.util.List;
 
-import org.dynmap.Color;
-import org.dynmap.ConfigurationNode;
-import org.dynmap.DynmapCore;
-import org.dynmap.MapManager;
+import org.dynmap.*;
 import org.dynmap.common.DynmapCommandSender;
 import org.dynmap.exporter.OBJExport;
 import org.dynmap.renderer.DynmapBlockState;
@@ -26,14 +23,13 @@ public class TopoHDShader implements HDShader {
     private final Color watercolor;
     private BitSet hiddenids;
     private final int linespacing;
-    
+    private int worldheight = 384;
     public TopoHDShader(DynmapCore core, ConfigurationNode configuration) {
         name = (String) configuration.get("name");
-        
-        fillcolor = new Color[384];   /* Color by Y */
+        fillcolor = new Color[worldheight];   /* Color by Y, must be range of total world height, offset by +64*/
         /* Load defined colors from parameters */
-        for(int i = 0; i < 384; i++) {
-            fillcolor[i] = configuration.getColor("color" + (i - 64),  null);
+        for(int i = 0; i < worldheight; i++) {
+            fillcolor[i] = configuration.getColor("color" + (i - 64),  null); /* need to substract by 64 because Color does not accept <0 indexes*/
         }
         linecolor = configuration.getColor("linecolor", null);
         watercolor = configuration.getColor("watercolor", null);
@@ -45,11 +41,11 @@ public class TopoHDShader implements HDShader {
         if(fillcolor[0] == null) {
             fillcolor[0] = new Color(0, 0, 0);
         }
-        if(fillcolor[383] == null) {
-            fillcolor[383] = new Color(255, 255, 255);
+        if(fillcolor[worldheight-1] == null) {
+            fillcolor[worldheight-1] = new Color(255, 255, 255);
         }
         int starty = 0;
-        for(int i = 0; i < 384; i++) {
+        for(int i = 0; i < worldheight; i++) {
             if(fillcolor[i] != null) {  /* Found color? */
                 int delta = i - starty;
                 Color c0 = fillcolor[starty];
